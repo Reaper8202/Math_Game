@@ -46,6 +46,11 @@ class MentalMathGame:
         self.current_solution = None
         self.problem_type = None
 
+        self.incorrect_counts = {ptype: 0 for ptype in self.get_problem_types()}
+
+    def get_problem_types(self):
+        return ['scientific notation', 'percentage', 'square root', 'trigonometry', 'logarithm', 'square', 'unit conversion']
+
     def start_game(self):
         self.result_frame.pack_forget()
         self.main_frame.pack_forget()
@@ -65,34 +70,18 @@ class MentalMathGame:
         self.answer_entry.place(x=(self.problem_label.winfo_x() + self.problem_label.winfo_width() / 2 - self.answer_entry.winfo_width() / 2), y=self.problem_label.winfo_y() + 50)
 
     def generate_problem(self):
-        problem_types = ['addition', 'subtraction', 'multiplication', 'division', 'scientific notation', 'percentage', 'square root', 'trigonometry', 'logarithm', 'square', 'unit conversion']
-        problem_type = random.choice(problem_types)
+        problem_types = self.get_problem_types()
 
-        if problem_type == 'addition':
-            a = round(random.uniform(1, 100), 1)
-            b = round(random.uniform(1, 100), 1)
-            problem = f"{a} + {b} = ?"
-            solution = a + b
+        # Adjust probabilities based on incorrect counts
+        total_incorrect = sum(self.incorrect_counts.values())
+        if total_incorrect > 0:
+            weights = [self.incorrect_counts[ptype] / total_incorrect for ptype in problem_types]
+        else:
+            weights = [1] * len(problem_types)
 
-        elif problem_type == 'subtraction':
-            a = round(random.uniform(50, 100), 1)
-            b = round(random.uniform(1, 49), 1)
-            problem = f"{a} - {b} = ?"
-            solution = a - b
+        problem_type = random.choices(problem_types, weights=weights, k=1)[0]
 
-        elif problem_type == 'multiplication':
-            a = random.randint(1, 20)
-            b = random.randint(1, 20)
-            problem = f"{a} * {b} = ?"
-            solution = a * b
-
-        elif problem_type == 'division':
-            a = random.randint(20, 100)
-            b = random.randint(1, 20)
-            problem = f"{a} / {b} = ?"
-            solution = a / b
-
-        elif problem_type == 'scientific notation':
+        if problem_type == 'scientific notation':
             a = round(random.uniform(1, 10), 1)
             b = random.randint(-5, 5)
             problem = f"{a} x 10^{b} = ?"
@@ -185,6 +174,7 @@ class MentalMathGame:
             self.score_label.config(text=f"Score: {self.correct_answers}")
             self.next_problem()
         else:
+            self.incorrect_counts[self.problem_type] += 1
             self.shake_entry()
 
     def shake_entry(self):
